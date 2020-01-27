@@ -2,6 +2,8 @@
 import os
 import discord
 from discord.ext import commands
+import IO
+from fuzzywuzzy import fuzz
 
 #bot token
 from dotenv import load_dotenv
@@ -12,17 +14,51 @@ token = os.getenv('DISCORD_TOKEN')
 # Initiate Bot instance
 bot = commands.Bot(command_prefix='!')
 
-#Start-up notification
+# Start-up notification
 @bot.event
 async def on_ready():
     print(
         f'{bot.user.name} has connected to Discord!:\n'
         "and the gild name is "f'{bot.guilds[0]}')
 
-#
-@bot.command(name='tobuy', help = 'Responds what need to be bought')
-async def getList(ctx, num_of_list:int):
-    response = "Apple!"
-    await ctx.send( f'{response}{num_of_list}')
+# Check current-list stored
+@bot.command(name='list', help = 'Returns the stored shopping list')
+async def getAllList(ctx):
+    await ctx.send(IO.readAll())
+
+# Add an item to the list
+@bot.command(name = 'addlist', help = 'Add a shopping item to the shopping list')
+async def addList(ctx, name:str):
+    currentListSearch = IO.searchOBJ(name)
+    if (currentListSearch!='None'):
+        if (fuzz.partial_ratio(currentListSearch,name)==100):
+            await ctx.send("An exact duplicate exist, please recheck!")
+        else:
+            await ctx.send("Hold on, there exist similiar item in list, do you mean "+currentListSearch+" ?")        
+    else: 
+        IO.writeOBJ(name)
+        await ctx.send("Success!")
+
+# Remove an item to the list
+@bot.command(name = 'remove', help = "Remove a certain item from the shopping list")
+async def removeList(ctx, name:str):
+    currentListSearch = IO.searchOBJ(name)
+    if(currentListSearch!='None'):
+        if (fuzz.partial_ratio(currentListSearch,name)==100):
+            IO.deleteOBJ(currentListSearch)
+            await ctx.send("An exact duplicate exist, already removed!")
+        else: 
+            IO.deleteOBJ(currentListSearch)
+            await ctx.send("I believe you mean this: "+currentListSearch+" , and this is now removed!")
+    else:
+        await ctx.send("Hmm, item not found. Please try again later.")
+
+
+# Remove all items from a list
+@bot.command(name = 'cleanAll', help = "Remove all items from the shopping list")
+async def newList(ctx):
+    IO.newList()
+    await ctx.send("A new shopping list has been created")
+
 # Run Bot instance
 bot.run(token)
