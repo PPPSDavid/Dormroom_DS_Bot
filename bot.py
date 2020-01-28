@@ -4,6 +4,17 @@ import discord
 from discord.ext import commands
 import IO
 from fuzzywuzzy import fuzz
+from googletrans import Translator
+
+SUPPORTED_LANG_LIST = ['en','zh-cn','zh-tw']
+
+# Check whether a selected language is supported.
+def checkSupportedLang(lang:str):
+    result = False
+    for sLang in SUPPORTED_LANG_LIST:
+        if (sLang == lang):
+            result = True
+    return result
 
 #bot token
 from dotenv import load_dotenv
@@ -25,6 +36,14 @@ async def on_ready():
 @bot.command(name='list', help = 'Returns the stored shopping list')
 async def getAllList(ctx):
     await ctx.send(IO.readAll())
+
+#Check current-list stored, in a specified language.
+@bot.command(name='listTran', help = 'Returns the stored shopping list in desired language')
+async def getAllListTran(ctx, lang:str):
+    if (not checkSupportedLang(lang)):
+        await ctx.send('Hmm, unsupported language detected \n Please use list command to see in English.')
+    translator = Translator()
+    await ctx.send(translator.translate(IO.readAll(),dest=lang).text)
 
 # Add an item to the list
 @bot.command(name = 'addlist', help = 'Add a shopping item to the shopping list')
