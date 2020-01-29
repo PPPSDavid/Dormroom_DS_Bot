@@ -3,10 +3,13 @@ import os
 import discord
 from discord.ext import commands
 import IO
+import weather
 from fuzzywuzzy import fuzz
 from googletrans import Translator
 
 SUPPORTED_LANG_LIST = ['en','zh-cn','zh-tw']
+LOCATION = 'Ithaca'
+DAILY=True
 
 # Check whether a selected language is supported.
 def checkSupportedLang(lang:str):
@@ -20,6 +23,7 @@ def checkSupportedLang(lang:str):
 from dotenv import load_dotenv
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
+
 # print(token)
 
 # Initiate Bot instance
@@ -58,7 +62,7 @@ async def addList(ctx, name:str):
         IO.writeOBJ(name)
         await ctx.send("Success!")
 
-# Remove an item to the list
+# Remove an item from the list
 @bot.command(name = 'remove', help = "Remove a certain item from the shopping list")
 async def removeList(ctx, name:str):
     currentListSearch = IO.searchOBJ(name)
@@ -78,6 +82,20 @@ async def removeList(ctx, name:str):
 async def newList(ctx):
     IO.newList()
     await ctx.send("A new shopping list has been created")
+
+# Initiate a split bill that notify group using DM.
+@bot.command(name = 'collectMoney', help = 'notify every dorm member to split the bill!')
+async def notifyAll(ctx, num:int):
+    author = ctx.author
+    for member in ctx.guild.members:
+        if ((not member.bot) and (member!=author) ):
+            member.send('Hi, user '+ author.name + ' has initiate a bill-split, the amount is: '+ num)
+    await ctx.send('A Notification has been sent')
+
+@bot.command(name = 'weather', help = 'provide detailed text weather update at specified location.')
+async def weatherPrint(ctx, city:str=LOCATION):
+    await ctx.send("Here is your daily weather service: \n" + weather.getCurrWeather(city))
+
 
 # Run Bot instance
 bot.run(token)
