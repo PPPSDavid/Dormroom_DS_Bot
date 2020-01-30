@@ -92,6 +92,7 @@ async def notifyAll(ctx, num:int):
             member.send('Hi, user '+ author.name + ' has initiate a bill-split, the amount is: '+ num)
     await ctx.send('A Notification has been sent')
 
+# Send out weather service data from given city.
 @bot.command(name = 'weather', help = 'provide detailed text weather update at specified location.')
 async def weatherPrint(ctx, city:str=LOCATION):
     await ctx.send("Here is your daily weather service: \n" + weather.getCurrWeather(city))
